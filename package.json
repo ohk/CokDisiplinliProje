@@ -1,0 +1,26 @@
+{
+  "name": "cokdisiplinliproje",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server/index.js",
+    "client": "nodemon client/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ohk/nodejsWebSocket.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ohk/nodejsWebSocket/issues"
+  },
+  "homepage": "https://github.com/ohk/nodejsWebSocket#readme",
+  "dependencies": {
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.1"
+  }
+}
