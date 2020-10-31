@@ -150,7 +150,7 @@ function App() {
         <Row>
           <LineChart
             width={size.width}
-            height={size.height / 3 - updated}
+            height={size.height/2 - updated}
             margin={{
               top: 20,
               right: size.width / 7,
@@ -164,7 +164,7 @@ function App() {
               type="category"
               allowDuplicatedCategory={false}
             />
-            <YAxis dataKey="value" />
+            <YAxis dataKey="value" type="number" domain={[0, 500]}/>
             <Tooltip />
             <Legend />
 
