@@ -13,7 +13,10 @@ const port = new SerialPort('COM1', { baudRate: 9600 })
 const parser = new Readline()
 port.pipe(parser)
 var lastValue = 0
-parser.on('data', line => lastValue = line)
+parser.on('data', line => {
+  lastValue = line
+  console.log("COM Port 1: Alınan Veri" , line)
+})
 
 const checkValue = async (name) => {
   socket.on("client", (msg) => {
