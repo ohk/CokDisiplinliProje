@@ -1,6 +1,20 @@
 const io = require("socket.io-client");
 const socket = io("http://localhost:8080");
 
+const readline = require("readline").createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+const SerialPort = require('serialport')
+const Readline = require('@serialport/parser-readline')
+const port = new SerialPort('COM1', { baudRate: 9600 })
+
+const parser = new Readline()
+port.pipe(parser)
+var lastValue = 0
+parser.on('data', line => lastValue = line)
+
 const checkValue = async (name) => {
   socket.on("client", (msg) => {
     if (msg === "checkValue") {
@@ -9,7 +23,7 @@ const checkValue = async (name) => {
         name: name,
         id: socket.id,
         timeStamp: new Date().toLocaleString(),
-        value: Math.floor(Math.random() * (500 - 0 + 1)),
+        value: lastValue,
       });
     }
   });
