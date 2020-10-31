@@ -1,11 +1,6 @@
 const io = require("socket.io-client");
 const socket = io("http://localhost:8080");
 
-const readline = require("readline").createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
 const checkValue = async (name) => {
   socket.on("client", (msg) => {
     if (msg === "checkValue") {
