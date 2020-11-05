@@ -8,7 +8,9 @@ var clients = [];
 var intervalTime = 5000;
 
 var interval = setInterval(function () {
-  io.sockets.emit("client", "checkValue");
+  io.sockets.emit("client", {
+    header: "check",
+  });
 }, intervalTime);
 
 io.on("connection", (socket) => {
@@ -41,11 +43,19 @@ io.on("connection", (socket) => {
         intervalTime = message.value;
         clearInterval(interval);
         interval = setInterval(function () {
-          io.sockets.emit("client", "checkValue");
+          io.sockets.emit("client", {
+            header: "check",
+          });
         }, intervalTime);
         io.emit("admin", {
           header: "settings",
           value: intervalTime,
+        });
+        break;
+      case "degree":
+        io.to(message.value.id).emit("client", {
+          header: "degree",
+          value: message.value.degree,
         });
         break;
       default:
