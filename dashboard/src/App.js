@@ -32,10 +32,11 @@ function App() {
   const [updated, setUpdated] = useState(100);
   const [srUpdated, setSRupdated] = useState(false);
   const [maxDegrees, setMaxDegrees] = useState([]);
-
+  //Bunu değiştim
   const socket = useRef();
 
   useEffect(() => {
+    //Bunu değiştim
     socket.current = socketIOClient("http://localhost:8080");
     ready
       ? console.log(ready)
@@ -98,6 +99,7 @@ function App() {
     });
   }, []);
 
+  //Bunu değiştim
   useEffect(() => {
     socket.current.emit("admin", {
       header: "settings",
@@ -105,6 +107,7 @@ function App() {
     });
   }, [srUpdated]);
 
+  //Bunu ekledim - Maximum sıcaklık değerini arayüzde güncelleyince buradaki arraye ekliyor ya da değiştiriyor
   const handleChange = (event) => {
     event.preventDefault();
     maxDegrees.find((item) => item.name === event.target.name) === undefined
@@ -113,6 +116,7 @@ function App() {
           event.target.value);
   };
 
+  //Bunu ekledim - Maximum sıcaklığı server a gönderiyor
   const handleClick = (event) => {
     event.preventDefault();
     const degree = maxDegrees.find((item) => item.name === event.target.id)
@@ -124,9 +128,9 @@ function App() {
         degree: degree || 35,
       },
     });
-    console.log(event.target);
     setShow(true);
   };
+
   return ready ? (
     <div className="App">
       <Container fluid>
@@ -249,9 +253,13 @@ function App() {
                             ?.maxDegree
                         }
                       </span>
+                      {/***
+                        Bunu ekledim - input alma kısmı
+                      */}
                     </Card.Text>
                     <input
-                      type="text"
+                      type="number"
+                      min={1}
                       style={{
                         margin: "10px",
                         padding: "7px",
@@ -265,10 +273,9 @@ function App() {
                         margin: "10px",
                       }}
                       id={greenHouse.id}
-                      name={index}
                       onClick={handleClick}
                     >
-                      Change Tempature
+                      Sıcaklığı Değiş
                     </Button>
                   </Card.Body>
                 </Card>
@@ -276,7 +283,10 @@ function App() {
             } catch (error) {}
           })}
         </Row>
-
+      {/***
+        * Bunu ekledim 
+        * toast Message
+        */}
         <Toast
           animation={true}
           onClose={() => setShow(false)}
