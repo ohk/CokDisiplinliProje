@@ -37,7 +37,6 @@ const checkValue = async () => {
         });
         break;
       case "degree":
-        console.log(message);
         maxDegree = message.value;
         //port.write(`${message.value}`);
         break;
