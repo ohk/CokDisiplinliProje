@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -10,13 +10,12 @@ import {
 } from "recharts";
 import socketIOClient from "socket.io-client";
 
-import { Button, Container, Row, Card, Col } from "react-bootstrap";
+import { Button, Container, Row, Card, Toast } from "react-bootstrap";
 
 function App() {
   const colors = [
     "#011627",
     "#2ec4b6",
-    "#e71d36",
     "#ff9f1c",
     "#4f000b",
     "#00509d",
@@ -25,21 +24,25 @@ function App() {
   ];
   const size = useWindowSize();
 
+  const [show, setShow] = useState(false);
   const [samplingRate, setSamplingRate] = useState(5000);
   const [SR, setSR] = useState(5);
   const [ready, setReady] = useState(false);
   const [greenHouses, setGreenHouses] = useState([]);
   const [updated, setUpdated] = useState(100);
   const [srUpdated, setSRupdated] = useState(false);
+  const [maxDegrees, setMaxDegrees] = useState([]);
+
+  const socket = useRef();
 
   useEffect(() => {
-    const socket = socketIOClient("http://localhost:8080");
+    socket.current = socketIOClient("http://localhost:8080");
     ready
       ? console.log(ready)
-      : socket.emit("admin", {
+      : socket.current.emit("admin", {
           header: "clients",
         });
-    socket.on("admin", (data) => {
+    socket.current.on("admin", (data) => {
       switch (data.header) {
         case "clients":
           data.value.map((item) => {
@@ -52,11 +55,9 @@ function App() {
           setReady(true);
           break;
         case "disconnect":
-          if (greenHouses.length > 1)
-            setGreenHouses(
-              greenHouses.filter((greenHouse) => greenHouse.name !== data.value)
-            );
-
+          setGreenHouses(
+            greenHouses.filter((greenHouse) => greenHouse.id !== data.value)
+          );
           break;
         case "connection":
           greenHouses.push(data.value);
@@ -74,6 +75,7 @@ function App() {
               .values.push({
                 timeStamp: data.timeStamp,
                 value: data.value,
+                maxDegree: data.maxDegree,
               });
           } catch (error) {
             greenHouses.push({
@@ -83,11 +85,13 @@ function App() {
                 {
                   timeStamp: data.timeStamp,
                   value: data.value,
+                  maxDegree: data.maxDegree,
                 },
               ],
             });
           }
           setUpdated(Math.random());
+          break;
         default:
           break;
       }
@@ -95,17 +99,34 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const socketR = socketIOClient("http://localhost:8080");
-    socketR.emit("admin", {
-      header: "settings",
-      value: SR * 1000,
-    });
-    socketR.emit("admin", {
+    socket.current.emit("admin", {
       header: "settings",
       value: SR * 1000,
     });
   }, [srUpdated]);
 
+  const handleChange = (event) => {
+    event.preventDefault();
+    maxDegrees.find((item) => item.name === event.target.name) === undefined
+      ? maxDegrees.push({ name: event.target.name, value: event.target.value })
+      : (maxDegrees.find((item) => item.name === event.target.name).value =
+          event.target.value);
+  };
+
+  const handleClick = (event) => {
+    event.preventDefault();
+    const degree = maxDegrees.find((item) => item.name === event.target.id)
+      ?.value;
+    socket.current.emit("admin", {
+      header: "degree",
+      value: {
+        id: event.target.id,
+        degree: degree || 35,
+      },
+    });
+    console.log(event.target);
+    setShow(true);
+  };
   return ready ? (
     <div className="App">
       <Container fluid>
@@ -150,7 +171,7 @@ function App() {
         <Row>
           <LineChart
             width={size.width}
-            height={size.height/2 - updated}
+            height={size.height / 2 - updated}
             margin={{
               top: 20,
               right: size.width / 7,
@@ -164,7 +185,7 @@ function App() {
               type="category"
               allowDuplicatedCategory={false}
             />
-            <YAxis dataKey="value" type="number" domain={[0, 500]}/>
+            <YAxis dataKey="value" type="number" domain={[0, 500]} />
             <Tooltip />
             <Legend />
 
@@ -190,41 +211,94 @@ function App() {
         >
           {greenHouses.map((greenHouse, index) => {
             try {
-              {
-                return (
-                  <Card
-                    style={{
-                      margin: "2rem",
-                      backgroundColor: colors[index],
-                      color: "#fff",
-                    }}
-                    key={greenHouse.id}
-                  >
-                    <Card.Body>
-                      <Card.Title>Sera Adı: {greenHouse?.name}</Card.Title>
-                      <Card.Text>
-                        Son Sıcaklık:{" "}
+              return (
+                <Card
+                  style={{
+                    margin: "2rem",
+                    backgroundColor: colors[index],
+                    color: "#fff",
+                  }}
+                  key={greenHouse.id}
+                >
+                  <Card.Body>
+                    <Card.Title>Sera Adı: {greenHouse?.name}</Card.Title>
+                    <Card.Text>
+                      Son Sıcaklık:{" "}
+                      {
+                        greenHouse?.values[greenHouse?.values?.length - 1]
+                          ?.value
+                      }
+                    </Card.Text>
+                    <Card.Text>
+                      Ölçüm Zamanı:{" "}
+                      {
+                        greenHouse?.values[greenHouse?.values?.length - 1]
+                          ?.timeStamp
+                      }
+                    </Card.Text>
+                    <Card.Text>
+                      Belirlenen Maximum Sıcaklık:{" "}
+                      <span
+                        style={{
+                          color: "#FF0000",
+                          fontWeight: "900",
+                        }}
+                      >
                         {
                           greenHouse?.values[greenHouse?.values?.length - 1]
-                            ?.value
+                            ?.maxDegree
                         }
-                      </Card.Text>
-                      <Card.Text>
-                        Ölçüm Zamanı:{" "}
-                        {
-                          greenHouse?.values[greenHouse?.values?.length - 1]
-                            ?.timeStamp
-                        }
-                      </Card.Text>
-                      {/*<input type="text" />
-                      <Button variant="primary">Change Tempature</Button>*/}
-                    </Card.Body>
-                  </Card>
-                );
-              }
+                      </span>
+                    </Card.Text>
+                    <input
+                      type="text"
+                      style={{
+                        margin: "10px",
+                        padding: "7px",
+                      }}
+                      name={greenHouse.id}
+                      onChange={handleChange}
+                    />
+                    <Button
+                      variant="primary"
+                      style={{
+                        margin: "10px",
+                      }}
+                      id={greenHouse.id}
+                      name={index}
+                      onClick={handleClick}
+                    >
+                      Change Tempature
+                    </Button>
+                  </Card.Body>
+                </Card>
+              );
             } catch (error) {}
           })}
         </Row>
+
+        <Toast
+          animation={true}
+          onClose={() => setShow(false)}
+          show={show}
+          delay={4000}
+          autohide
+          style={{
+            backgroundColor: "#ccc",
+            position: "absolute",
+            bottom: 0,
+            left: "3%",
+          }}
+        >
+          <Toast.Header>
+            <strong className="mr-auto">System</strong>
+            <small>Şimdi</small>
+          </Toast.Header>
+          <Toast.Body>
+            Güncelleme başarılı bir sonraki örneklemede sıcaklık değeri
+            değişecektir.
+          </Toast.Body>
+        </Toast>
       </Container>
     </div>
   ) : (
